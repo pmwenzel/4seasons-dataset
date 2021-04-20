@@ -9,7 +9,7 @@
 	<body>
 		<div id="info">
 			<div>recording_2020-10-07_14-47-51</div>
-			<div>+/-: Increase/Decrease point size</div>
+			<!-- <div>+/-: Increase/Decrease point size</div> -->
 		</div>
 		
 		<section id="loading-screen">
@@ -64,6 +64,7 @@
 
 					scene.add( points );
 					points.material.vertexColors = THREE.VertexColors;
+					points.material.size *= 40;
 					const center = points.geometry.boundingSphere.center;
 					controls.target.set( center.x, center.y, center.z );
 					controls.update();
