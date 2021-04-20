@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Point cloud visualization</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+	<body>
+		<div id="info">
+			<div>recording_2020-10-07_14-47-51</div>
+			<div>+/-: Increase/Decrease point size</div>
+		</div>
+		
+		<section id="loading-screen">
+			<div id="loader"></div>
+		</section>
+
+		<script type="module">
+
+			import * as THREE from './build/three.module.js';
+
+			import Stats from './jsm/libs/stats.module.js';
+
+			import { TrackballControls } from './jsm/controls/TrackballControls.js';
+			import { PCDLoader } from './jsm/loaders/PCDLoader.js';
+
+			let container, stats;
+			let camera, controls, scene, renderer;
+
+			init();
+			animate();
+			function init() {
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x000000 );
+
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+				camera.position.x = 0;
+				camera.position.y = 0;
+				camera.position.z = 500;
+  				camera.up.set(0, 0, 1);
+
+				scene.add( camera );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				// Loading Manager
+				const loadingManager = new THREE.LoadingManager( () => {
+					
+					const loadingScreen = document.getElementById( 'loading-screen' );
+					loadingScreen.classList.add( 'fade-out' );
+					loadingScreen.addEventListener( 'transitionend', onTransitionEnd );
+					
+				} );
+
+				const loader = new PCDLoader(loadingManager);
+				loader.load( './jsm/models/recording_2020-10-07_14-47-51.pcd', function ( points)
+
+				{
+
+					scene.add( points );
+					points.material.vertexColors = THREE.VertexColors;
+					const center = points.geometry.boundingSphere.center;
+					controls.target.set( center.x, center.y, center.z );
+					controls.update();
+
+				} );
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				container.appendChild( renderer.domElement );
+
+				controls = new TrackballControls( camera, renderer.domElement );
+
+				controls.rotateSpeed = 2.0;
+				controls.zoomSpeed = 0.8;
+				controls.panSpeed = 0.8;
+
+				controls.staticMoving = true;
+
+				controls.minDistance = 10;
+				controls.maxDistance = 500;
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				window.addEventListener( 'resize', onWindowResize );
+
+				window.addEventListener( 'keypress', keyboard );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				controls.handleResize();
+
+			}
+
+			function keyboard( ev ) {
+
+				const points = scene.getObjectByName( 'recording_2020-10-07_14-47-51.pcd' );
+
+				switch ( ev.key || String.fromCharCode( ev.keyCode || ev.charCode ) ) {
+
+					case '+':
+						points.material.size *= 1.2;
+						points.material.needsUpdate = true;
+						break;
+
+					case '-':
+						points.material.size /= 1.2;
+						points.material.needsUpdate = true;
+						break;
+
+				}
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				controls.update();
+				renderer.render( scene, camera );
+				stats.update();
+
+			}
+			function onTransitionEnd( event ) {
+
+				const element = event.target;
+				element.remove();
+
+			}
+
+		</script>
+	</body>
+</html>
